@@ -14,7 +14,7 @@ For example:
 ```
 java -jar mqtt-elasticsearch-bridge-0.1-SNAPSHOT.jar -e tcp://localhost:9300 -m tcp://localhost:1883 -t /etc/template.json
 ```
-#Template format
+# Template format
 ```
 {
     "mappers":[
@@ -39,7 +39,7 @@ Where:
 
 `index` - default index for document if no other rules specified.
 
-`type` - default document type if no other rule specified/
+`type` - default document type if no other rule specified.
 
 `fields` - array of rules to convert field names. Each rule contains `from` and `to` fields.
 if `from` defined as `$n` corresponding group from `topic` will be taken.
