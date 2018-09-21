@@ -1,0 +1,102 @@
+package ru.anhot.mqtt.mqtt_elastic;
+
+import org.elasticsearch.common.Strings;
+import org.json.JSONObject;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class MessageMapper {
+
+    public static final String FIELD_INDEX = "__index";
+    public static final String FIELD_TYPE  = "__type";
+    public static final String FIELD_ID    = "__id";
+    private static final String GROUP_PATTERN = "\\$(\\d)";
+    private String defaultIndex = "index";
+    private String defaultType = "type";
+
+    private Pattern pattern;
+    private Pattern groupPattern;
+    private Map<String, String> fields;
+
+    public MessageMapper(String pattern, Map<String, String> fields) {
+        this.pattern = Pattern.compile(pattern);
+        this.fields = fields;
+        this.groupPattern = Pattern.compile(GROUP_PATTERN);
+    }
+
+
+    public Optional<ElasticPayload> map(String topic, String mqttPayload) {
+        if (Strings.isNullOrEmpty(topic) || Strings.isNullOrEmpty(mqttPayload))
+            return Optional.empty();
+        Matcher matcher = pattern.matcher(topic);
+        if (!matcher.matches())
+            return Optional.empty();
+        JSONObject jsonFrom = new JSONObject(mqttPayload);
+        JSONObject jsonTo = new JSONObject();
+        ElasticPayload result = new ElasticPayload();
+        for (String from : fields.keySet()) {
+            String to = fields.get(from);
+
+            Object val;
+            Matcher groupMatcher = groupPattern.matcher(from);
+            if (groupMatcher.matches()) {
+                Integer group = Integer.valueOf(groupMatcher.group(1));
+                val = matcher.group(group);
+            } else
+                val = jsonFrom.get(from);
+
+            if (FIELD_INDEX.equals(to))
+                result.setIndex(String.valueOf(val));
+            else if (FIELD_TYPE.equals(to))
+                result.setType(String.valueOf(val));
+            else if (FIELD_ID.equals(to))
+                result.setId(String.valueOf(val));
+            else
+                jsonTo.put(to,val);
+
+            if (result.getIndex()==null)
+                result.setIndex(defaultIndex);
+            if (result.getType()==null)
+                result.setType(defaultType);
+            if (result.getId()==null)
+                result.setId(UUID.randomUUID().toString());
+        }
+        result.setSource(jsonTo.toString());
+        return Optional.of(result);
+    }
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder()
+                .append("Pattern: \"").append(pattern).append("\" ")
+                .append("Fields: ").append(fields.toString());
+        return builder.toString();
+    }
+
+    public Pattern getPattern() {
+        return pattern;
+    }
+
+    public Map<String, String> getFields() {
+        return fields;
+    }
+
+    public String getDefaultIndex() {
+        return defaultIndex;
+    }
+
+    public void setDefaultIndex(String defaultIndex) {
+        this.defaultIndex = defaultIndex;
+    }
+
+    public String getDefaultType() {
+        return defaultType;
+    }
+
+    public void setDefaultType(String defaultType) {
+        this.defaultType = defaultType;
+    }
+}

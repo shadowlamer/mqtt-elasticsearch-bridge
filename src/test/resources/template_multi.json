@@ -1,0 +1,24 @@
+{
+  "mappers": [
+    {
+      "topic": "test1",
+      "fields": []
+    },
+    {
+      "topic": "test2",
+      "fields": []
+    },
+    {
+      "topic": "test3",
+      "fields": []
+    },
+    {
+      "topic": "test4",
+      "fields": []
+    },
+    {
+      "topic": "test5",
+      "fields": []
+    }
+  ]
+}

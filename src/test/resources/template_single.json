@@ -1,0 +1,27 @@
+{
+  "topic": "(\\w+)/(\\w+)",
+  "index": "index",
+  "type": "type",
+  "fields": [
+    {
+      "from": "from1",
+      "to": "to1"
+    },
+    {
+      "from": "from2",
+      "to": "to2"
+    },
+    {
+      "from": "$1",
+      "to": "__index"
+    },
+    {
+      "from": "$2",
+      "to": "__type"
+    },
+    {
+      "from": "id",
+      "to": "__id"
+    }
+  ]
+}
