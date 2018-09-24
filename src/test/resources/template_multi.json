@@ -2,23 +2,77 @@
   "mappers": [
     {
       "topic": "test1",
-      "fields": []
+      "index": "index1",
+      "type": "type1",
+      "fields": [
+        {
+          "from": "from1",
+          "to": "to1",
+          "property": {
+            "type": "boolean"
+          }
+        }
+      ]
     },
     {
       "topic": "test2",
-      "fields": []
+      "index": "index1",
+      "type": "type2",
+      "fields": [
+        {
+          "from": "from1",
+          "to": "to1",
+          "property": {
+            "type": "boolean"
+          }
+        },
+        {
+          "from": "from2",
+          "to": "to2",
+          "property": {
+            "type": "integer"
+          }
+        }
+      ]
     },
     {
       "topic": "test3",
-      "fields": []
+      "index": "index2",
+      "type": "type1",
+      "fields": [
+        {
+          "from": "from1",
+          "to": "to1",
+          "property": {
+            "type": "boolean"
+          }
+        }
+      ]
     },
     {
       "topic": "test4",
-      "fields": []
+      "index": "index2",
+      "type": "type2",
+      "fields": [
+        {
+          "from": "from1",
+          "to": "to1",
+          "property": {
+            "type": "boolean"
+          }
+        }
+      ]
     },
     {
       "topic": "test5",
-      "fields": []
+      "index": "index3",
+      "type": "type2",
+      "fields": [
+        {
+          "from": "from1",
+          "to": "to2"
+        }
+      ]
     }
   ]
 }

@@ -19,6 +19,7 @@ public class MessageMapperFactory {
     public static final String CONFIG_ELEMENT_FIELDS  = "fields";
     public static final String CONFIG_ELEMENT_FROM    = "from";
     public static final String CONFIG_ELEMENT_TO      = "to";
+    public static final String CONFIG_ELEMENT_PROP    = "property";
     public static final String CONFIG_ELEMENT_MAPPERS = "mappers";
 
     public static MessageMapper createFromTemplate(JSONObject template) {
@@ -27,8 +28,11 @@ public class MessageMapperFactory {
         Map<String, String> fields = StreamSupport.stream(jsonFields.spliterator(), false)
                 .map(JSONObject.class::cast)
                 .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_FROM), f->f.getString(CONFIG_ELEMENT_TO)));
-        MessageMapper result = new MessageMapper(topic, fields);
-
+        Map<String, String> properties = StreamSupport.stream(jsonFields.spliterator(), false)
+                .map(JSONObject.class::cast)
+                .filter(f->f.has(CONFIG_ELEMENT_PROP))
+                .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_TO), f->f.getJSONObject(CONFIG_ELEMENT_PROP).toString()));
+        MessageMapper result = new MessageMapper(topic, fields, properties);
 
         try {
             result.setDefaultIndex(template.getString(CONFIG_ELEMENT_INDEX));

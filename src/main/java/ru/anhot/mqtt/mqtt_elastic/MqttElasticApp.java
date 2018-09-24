@@ -7,6 +7,7 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.json.JSONObject;
 
@@ -19,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class MqttElasticApp {
@@ -88,8 +90,13 @@ public class MqttElasticApp {
         }
 
         List<MessageMapper> mappers = MessageMapperFactory.createMultiFromTemplate(template);
+        Map<String, JSONObject> indexes = IndexFactory.composeIndexes(mappers);
 
         MqttClient mqttClient= null;
+        TransportClient elasticClient = null;
+
+        System.out.println("Connecting...");
+
         try {
             mqttClient = new MqttClient(mqttUri.toString(), MqttClient.generateClientId());
         } catch (MqttException e) {
@@ -98,7 +105,6 @@ public class MqttElasticApp {
             return;
         }
 
-        TransportClient elasticClient = null;
         try {
             elasticClient = new PreBuiltTransportClient(Settings.EMPTY)
                     .addTransportAddress(new TransportAddress(InetAddress.getByName(elasticUri.getHost()), elasticUri.getPort()));
@@ -116,6 +122,25 @@ public class MqttElasticApp {
             System.exit(5);
             return;
         }
+
+        for (MessageMapper mapper: mappers) {
+            String indexName = mapper.getDefaultIndex();
+            boolean exists = elasticClient.admin().indices()
+                    .prepareExists(indexName)
+                    .execute().actionGet().isExists();
+            if (!exists) {
+                JSONObject index = indexes.get(indexName);
+                if (index!=null) {
+                    if (!elasticClient.admin().indices().prepareCreate(indexName)
+                            .setSource(index.toString(), XContentType.JSON).execute().actionGet().isAcknowledged()) {
+                        System.out.println("Can't create index "+indexName+".");
+                    }
+                }
+            }
+
+        }
+
+        System.out.println("Server started.");
 
         try {
             mqttClient.subscribe("#");

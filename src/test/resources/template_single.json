@@ -5,11 +5,14 @@
   "fields": [
     {
       "from": "from1",
-      "to": "to1"
+      "to": "to1",
+      "property": {"type": "string"}
     },
     {
       "from": "from2",
-      "to": "to2"
+      "to": "to2",
+      "property": {"type": "string"}
+
     },
     {
       "from": "$1",

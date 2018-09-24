@@ -22,12 +22,20 @@ public class MessageMapper {
     private Pattern groupPattern;
     private Map<String, String> fields;
 
-    public MessageMapper(String pattern, Map<String, String> fields) {
-        this.pattern = Pattern.compile(pattern);
-        this.fields = fields;
-        this.groupPattern = Pattern.compile(GROUP_PATTERN);
+    private Map<String, String> properties;
+
+    public MessageMapper(String pattern, Map<String, String> fields, Map<String, String> properties, String index, String type) {
+        this(pattern, fields, properties);
+        this.defaultIndex = index;
+        this.defaultType = type;
     }
 
+    public MessageMapper(String pattern, Map<String, String> fields, Map<String,String> properties) {
+        this.pattern = Pattern.compile(pattern);
+        this.fields = fields;
+        this.properties = properties;
+        this.groupPattern = Pattern.compile(GROUP_PATTERN);
+    }
 
     public Optional<ElasticPayload> map(String topic, String mqttPayload) {
         if (Strings.isNullOrEmpty(topic) || Strings.isNullOrEmpty(mqttPayload))
@@ -72,7 +80,8 @@ public class MessageMapper {
     public String toString() {
         StringBuilder builder = new StringBuilder()
                 .append("Pattern: \"").append(pattern).append("\" ")
-                .append("Fields: ").append(fields.toString());
+                .append("Fields: ").append(fields.toString())
+                .append("Properties: ").append(fields.toString());
         return builder.toString();
     }
 
@@ -98,5 +107,9 @@ public class MessageMapper {
 
     public void setDefaultType(String defaultType) {
         this.defaultType = defaultType;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
     }
 }
