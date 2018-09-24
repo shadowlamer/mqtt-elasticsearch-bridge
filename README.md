@@ -47,3 +47,4 @@ There are predefined values for `to`: `__index`,`__type` and `__id` for index, t
 
 If no id is defined for document UUID will be generated.
  
+See `develop` branch for new features.
