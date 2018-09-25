@@ -27,7 +27,7 @@ public class MessageMapperFactory {
         JSONArray jsonFields = template.getJSONArray(CONFIG_ELEMENT_FIELDS);
         Map<String, String> fields = StreamSupport.stream(jsonFields.spliterator(), false)
                 .map(JSONObject.class::cast)
-                .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_FROM), f->f.getString(CONFIG_ELEMENT_TO)));
+                .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_TO), f->f.getString(CONFIG_ELEMENT_FROM)));
         Map<String, String> properties = StreamSupport.stream(jsonFields.spliterator(), false)
                 .map(JSONObject.class::cast)
                 .filter(f->f.has(CONFIG_ELEMENT_PROP))

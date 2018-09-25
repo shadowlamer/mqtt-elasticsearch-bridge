@@ -14,6 +14,7 @@ public class MessageMapper {
     public static final String FIELD_INDEX = "__index";
     public static final String FIELD_TYPE  = "__type";
     public static final String FIELD_ID    = "__id";
+    public static final String FIELD_UUID    = "__uuid";
     private static final String GROUP_PATTERN = "\\$(\\d)";
     private String defaultIndex = "index";
     private String defaultType = "type";
@@ -46,14 +47,17 @@ public class MessageMapper {
         JSONObject jsonFrom = new JSONObject(mqttPayload);
         JSONObject jsonTo = new JSONObject();
         ElasticPayload result = new ElasticPayload();
-        for (String from : fields.keySet()) {
-            String to = fields.get(from);
+        String uuid = UUID.randomUUID().toString();
+        for (String to : fields.keySet()) {
+            String from = fields.get(to);
 
             Object val;
             Matcher groupMatcher = groupPattern.matcher(from);
             if (groupMatcher.matches()) {
                 Integer group = Integer.valueOf(groupMatcher.group(1));
                 val = matcher.group(group);
+            } else if (FIELD_UUID.equals(from)) {
+                val = uuid;
             } else
                 val = jsonFrom.get(from);
 
@@ -71,7 +75,7 @@ public class MessageMapper {
             if (result.getType()==null)
                 result.setType(defaultType);
             if (result.getId()==null)
-                result.setId(UUID.randomUUID().toString());
+                result.setId(uuid);
         }
         result.setSource(jsonTo.toString());
         return Optional.of(result);

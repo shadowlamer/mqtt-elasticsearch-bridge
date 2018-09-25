@@ -15,7 +15,7 @@ public class MessageMapperFactoryTest {
         MessageMapper mapper = MessageMapperFactory.createFromTemplate(template);
         Assert.assertEquals("(\\w+)/(\\w+)",mapper.getPattern().toString());
         Assert.assertEquals(5, mapper.getFields().size());
-        Assert.assertEquals("{from1=to1, from2=to2, id=__id, $1=__index, $2=__type}", mapper.getFields().toString());
+        Assert.assertEquals("{__index=$1, to2=from2, __id=id, __type=$2, to1=from1}", mapper.getFields().toString());
         Assert.assertEquals("{to2={\"type\":\"string\"}, to1={\"type\":\"string\"}}", mapper.getProperties().toString());
     }
 
