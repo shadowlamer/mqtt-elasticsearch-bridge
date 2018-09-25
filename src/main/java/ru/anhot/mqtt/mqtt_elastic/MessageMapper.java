@@ -14,7 +14,8 @@ public class MessageMapper {
     public static final String FIELD_INDEX = "__index";
     public static final String FIELD_TYPE  = "__type";
     public static final String FIELD_ID    = "__id";
-    public static final String FIELD_UUID    = "__uuid";
+    public static final String GENERATOR_UUID = "@@uuid";
+    public static final String GENERATOR_ID = "@@id";
     private static final String GROUP_PATTERN = "\\$(\\d)";
     private String defaultIndex = "index";
     private String defaultType = "type";
@@ -23,15 +24,15 @@ public class MessageMapper {
     private Pattern groupPattern;
     private Map<String, String> fields;
 
-    private Map<String, String> properties;
+    private Map<String, JSONObject> properties;
 
-    public MessageMapper(String pattern, Map<String, String> fields, Map<String, String> properties, String index, String type) {
+    public MessageMapper(String pattern, Map<String, String> fields, Map<String, JSONObject> properties, String index, String type) {
         this(pattern, fields, properties);
         this.defaultIndex = index;
         this.defaultType = type;
     }
 
-    public MessageMapper(String pattern, Map<String, String> fields, Map<String,String> properties) {
+    public MessageMapper(String pattern, Map<String, String> fields, Map<String,JSONObject> properties) {
         this.pattern = Pattern.compile(pattern);
         this.fields = fields;
         this.properties = properties;
@@ -47,7 +48,7 @@ public class MessageMapper {
         JSONObject jsonFrom = new JSONObject(mqttPayload);
         JSONObject jsonTo = new JSONObject();
         ElasticPayload result = new ElasticPayload();
-        String uuid = UUID.randomUUID().toString();
+        UUID uuid = UUID.randomUUID();
         for (String to : fields.keySet()) {
             String from = fields.get(to);
 
@@ -56,8 +57,10 @@ public class MessageMapper {
             if (groupMatcher.matches()) {
                 Integer group = Integer.valueOf(groupMatcher.group(1));
                 val = matcher.group(group);
-            } else if (FIELD_UUID.equals(from)) {
-                val = uuid;
+            } else if (GENERATOR_UUID.equals(from)) {
+                val = uuid.toString();
+            } else if (GENERATOR_ID.equals(from)) {
+                val = MqttElasticApp.getLongId();
             } else
                 val = jsonFrom.get(from);
 
@@ -75,7 +78,7 @@ public class MessageMapper {
             if (result.getType()==null)
                 result.setType(defaultType);
             if (result.getId()==null)
-                result.setId(uuid);
+                result.setId(uuid.toString());
         }
         result.setSource(jsonTo.toString());
         return Optional.of(result);
@@ -113,7 +116,7 @@ public class MessageMapper {
         this.defaultType = defaultType;
     }
 
-    public Map<String, String> getProperties() {
+    public Map<String, JSONObject> getProperties() {
         return properties;
     }
 }

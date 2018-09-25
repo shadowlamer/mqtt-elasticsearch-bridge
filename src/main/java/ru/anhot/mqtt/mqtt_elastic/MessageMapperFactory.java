@@ -28,10 +28,10 @@ public class MessageMapperFactory {
         Map<String, String> fields = StreamSupport.stream(jsonFields.spliterator(), false)
                 .map(JSONObject.class::cast)
                 .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_TO), f->f.getString(CONFIG_ELEMENT_FROM)));
-        Map<String, String> properties = StreamSupport.stream(jsonFields.spliterator(), false)
+        Map<String, JSONObject> properties = StreamSupport.stream(jsonFields.spliterator(), false)
                 .map(JSONObject.class::cast)
                 .filter(f->f.has(CONFIG_ELEMENT_PROP))
-                .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_TO), f->f.getJSONObject(CONFIG_ELEMENT_PROP).toString()));
+                .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_TO), f->f.getJSONObject(CONFIG_ELEMENT_PROP)));
         MessageMapper result = new MessageMapper(topic, fields, properties);
 
         try {

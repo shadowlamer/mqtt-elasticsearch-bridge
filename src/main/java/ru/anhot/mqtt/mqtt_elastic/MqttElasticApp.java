@@ -19,11 +19,14 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class MqttElasticApp {
+
+    private static long longId = new Date().getTime();
 
     private static JSONObject loadJsonFromFile(String name) throws IOException {
         InputStream jsonStream =  new FileInputStream(name);
@@ -151,4 +154,10 @@ public class MqttElasticApp {
         }
 
     }
+
+    public static long getLongId() {
+        longId++;
+        return longId;
+    }
+
 }

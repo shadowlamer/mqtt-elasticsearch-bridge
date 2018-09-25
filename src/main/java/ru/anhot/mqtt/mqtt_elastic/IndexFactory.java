@@ -15,12 +15,12 @@ public class IndexFactory {
     public static final String CONFIG_ELEMENT_PROPERTIES = "properties";
 
     public static Map<String,JSONObject> composeIndexes(List<MessageMapper> mappers) {
-        Map<Pair<String, String>, Map<String,String>> mappings = new HashMap<Pair<String, String>, Map<String,String>>();
+        Map<Pair<String, String>, Map<String,JSONObject>> mappings = new HashMap<Pair<String, String>, Map<String,JSONObject>>();
         for (MessageMapper mapper: mappers) {
             Pair<String, String> key = new Pair<String, String>(mapper.getDefaultIndex(), mapper.getDefaultType());
-            Map<String,String> properties = mappings.get(key);
+            Map<String,JSONObject> properties = mappings.get(key);
             if (properties==null) {
-                properties = new HashMap<String, String>();
+                properties = new HashMap<String, JSONObject>();
                 mappings.put(key,properties);
             }
             for (String field:mapper.getProperties().keySet()) {
@@ -56,7 +56,7 @@ public class IndexFactory {
 
             JSONObject properties = new JSONObject();
             for (String field:mappings.get(key).keySet()){
-                properties.put(field, new JSONObject(mappings.get(key).get(field)));
+                properties.put(field, mappings.get(key).get(field));
                 emptyIndex = false;
             }
 
