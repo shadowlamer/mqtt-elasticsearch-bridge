@@ -4,9 +4,13 @@ package ru.anhot.mqtt.mqtt_elastic;
 import org.apache.commons.cli.*;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.common.unit.ByteSizeUnit;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.json.JSONObject;
@@ -26,6 +30,18 @@ import java.util.Scanner;
 
 public class MqttElasticApp {
 
+    public static final int BULK_DEFAULT_ACTIONS   = 200;
+    public static final int BULK_DEFAULT_SIZE   = 5;
+    public static final int BULK_DEFAULT_FLUSH  = 5;
+    public static final int BULK_DEFAULT_CONCURRENT  = 1;
+
+    public static final String OPTION_TEMPLATE  = "template";
+    public static final String OPTION_MQTT_URI  = "mqtt-uri";
+    public static final String OPTION_ELASTIC_URI  = "elastic-uri";
+    public static final String OPTION_BULK_ACTIONS  = "bulk-actions";
+    public static final String OPTION_BULK_SIZE  = "bulk-size";
+    public static final String OPTION_BULK_FLUSH  = "bulk-flush";
+
     private static long longId = new Date().getTime();
 
     private static JSONObject loadJsonFromFile(String name) throws IOException {
@@ -38,18 +54,32 @@ public class MqttElasticApp {
 
         Options options = new Options();
         JSONObject template;
+        BulkListener listener;
+        BulkProcessor bulkProcessor;
 
-        Option templateOption = new Option("t", "template", true, "Template file path (JSON)");
+        Option templateOption = new Option("t", OPTION_TEMPLATE, true, "Template file path (JSON)");
         templateOption.setRequired(true);
         options.addOption(templateOption);
 
-        Option mqttOption = new Option("m", "mqtt-uri", true, "MQTT broker URI");
+        Option mqttOption = new Option("m", OPTION_MQTT_URI, true, "MQTT broker URI");
         mqttOption.setRequired(true);
         options.addOption(mqttOption);
 
-        Option elasticOption = new Option("e", "elastic-uri", true, "Elasticsearch server URI");
+        Option elasticOption = new Option("e", OPTION_ELASTIC_URI, true, "Elasticsearch server URI");
         elasticOption.setRequired(true);
         options.addOption(elasticOption);
+
+        Option bulkActionsOption = new Option("n", OPTION_BULK_ACTIONS, true, "Max number of actions per bulk request");
+        bulkActionsOption.setRequired(false);
+        options.addOption(bulkActionsOption);
+
+        Option bulkSizeOption = new Option("s", OPTION_BULK_SIZE, true, "Max amount of data per bulk request (megabytes)");
+        bulkSizeOption.setRequired(false);
+        options.addOption(bulkSizeOption);
+
+        Option bulkIntervalOption = new Option("i", OPTION_BULK_FLUSH, true, "Bulk request flush interval (seconds)");
+        bulkIntervalOption.setRequired(false);
+        options.addOption(bulkIntervalOption);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -64,11 +94,11 @@ public class MqttElasticApp {
             return;
         }
 
-        String templatePath = cmd.getOptionValue("template");
+        String templatePath = cmd.getOptionValue(OPTION_TEMPLATE);
 
         URI mqttUri = null;
         try {
-            mqttUri = new URI(cmd.getOptionValue("mqtt-uri"));
+            mqttUri = new URI(cmd.getOptionValue(OPTION_MQTT_URI));
         } catch (URISyntaxException e) {
             System.out.println("Wrong MQTT broker URI.");
             System.exit(3);
@@ -77,7 +107,7 @@ public class MqttElasticApp {
 
         URI elasticUri = null;
         try {
-            elasticUri = new URI(cmd.getOptionValue("elastic-uri"));
+            elasticUri = new URI(cmd.getOptionValue(OPTION_ELASTIC_URI));
         } catch (URISyntaxException e) {
             System.out.println("Wrong Elasticsearch server URI.");
             System.exit(4);
@@ -117,7 +147,26 @@ public class MqttElasticApp {
             return;
         }
 
-        mqttClient.setCallback( new BridgeCallback(elasticClient, mappers) );
+        int bulkActions = BULK_DEFAULT_ACTIONS;
+        int bulkSize = BULK_DEFAULT_SIZE;
+        int bulkFlush = BULK_DEFAULT_FLUSH;
+        if (cmd.hasOption(OPTION_BULK_ACTIONS))
+            bulkActions = Integer.valueOf(cmd.getOptionValue(OPTION_BULK_ACTIONS));
+        if (cmd.hasOption(OPTION_BULK_SIZE))
+            bulkActions = Integer.valueOf(cmd.getOptionValue(OPTION_BULK_SIZE));
+        if (cmd.hasOption(OPTION_BULK_FLUSH))
+            bulkActions = Integer.valueOf(cmd.getOptionValue(OPTION_BULK_FLUSH));
+                
+        listener = new BulkListener();
+        bulkProcessor = BulkProcessor.builder(elasticClient, listener)
+                .setBulkActions(bulkActions)
+                .setBulkSize(new ByteSizeValue(bulkSize, ByteSizeUnit.MB))
+                .setFlushInterval(TimeValue.timeValueSeconds(bulkFlush))
+                .setConcurrentRequests(BULK_DEFAULT_CONCURRENT)
+                .build();
+
+
+        mqttClient.setCallback( new BridgeCallback(elasticClient, mappers, bulkProcessor) );
         try {
             mqttClient.connect();
         } catch (MqttException e) {
