@@ -47,7 +47,8 @@ Where:
 `fields` - array of rules to convert field names. Each rule contains `from` and `to` fields.
 if `from` defined as `$n` corresponding group from `topic` will be taken.
 There are predefined values for `to`: `__index`,`__type` and `__id` for index, type and id of document. 
-Predefined value `__uuid` allowed in `from` field. 
+
+You can use generated values in `from` field. There are `@@uuid` and `@@id` generators defined for now. `@@uuid` generates string UUID, `@@id` generates long value, starting from timestamp, when app was started and increments it on each request.
 
 if mapper definition contains at least one `property` field and there is no index named `index` exists index with apropriate name, document types and mappings will be created.
 
