@@ -4,9 +4,13 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.ByteSizeUnit;
+import org.elasticsearch.common.unit.ByteSizeValue;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 
 import java.util.List;
@@ -17,14 +21,12 @@ public class BridgeCallback implements MqttCallback {
 
     private Client elasticClient;
     private List<MessageMapper> mappers;
-    private ActionListener<BulkResponse> listener;
-    private BulkRequestBuilder bulkRequest;
+    private BulkProcessor bulkProcessor;
 
-    public BridgeCallback(Client elasticClient, List<MessageMapper> mappers) {
+    public BridgeCallback(Client elasticClient, List<MessageMapper> mappers, BulkProcessor bulkProcessor) {
         this.elasticClient = elasticClient;
         this.mappers = mappers;
-        this.listener = new ElasticListener();
-        bulkRequest = elasticClient.prepareBulk();
+        this.bulkProcessor = bulkProcessor;
     }
 
     public void connectionLost(Throwable cause) {
@@ -34,11 +36,9 @@ public class BridgeCallback implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         for (MessageMapper mapper:mappers)
             mapper.map(topic,message.toString()).ifPresent(payload->{
-                bulkRequest.add(elasticClient.prepareIndex(payload.getIndex(), payload.getType(), payload.getId())
-                        .setSource(payload.getSource(), XContentType.JSON));
+                bulkProcessor.add(elasticClient.prepareIndex(payload.getIndex(), payload.getType(), payload.getId())
+                        .setSource(payload.getSource(), XContentType.JSON).request());
             });
-        if (bulkRequest.numberOfActions() > BULK_SIZE)
-            bulkRequest.execute(listener);
     }
 
     public void deliveryComplete(IMqttDeliveryToken token) {
