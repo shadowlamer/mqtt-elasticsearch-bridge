@@ -6,9 +6,12 @@ java -jar mqtt-elasticsearch-bridge-0.1-SNAPSHOT.jar [Options...]
 ```
 Where `Options` are:
 ```
- -e,--elastic-uri <arg>   Elasticsearch server URI
- -m,--mqtt-uri <arg>      MQTT broker URI
- -t,--template <arg>      Template file path
+ -e,--elastic-uri <arg>    Elasticsearch server URI
+ -i,--bulk-flush <arg>     Bulk request flush interval
+ -m,--mqtt-uri <arg>       MQTT broker URI
+ -n,--bulk-actions <arg>   Max number of actions per bulk request
+ -s,--bulk-size <arg>      Max amount of data per bulk request
+ -t,--template <arg>       Template file path (JSON)
 ```
 For example:
 ```
