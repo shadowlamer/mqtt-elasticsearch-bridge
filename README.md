@@ -1,8 +1,10 @@
 # mqtt-elasticsearch-bridge
 Consumes MQTT messages with JSON payload, converts them and sends to Elasticsearch. You can define conversion rules as JSON template.
 # Usage
+
+## As executable jar
 ```
-java -jar mqtt-elasticsearch-bridge-0.1-SNAPSHOT.jar [Options...]
+java -jar mqtt-elasticsearch-bridge.jar [Options...]
 ```
 Where `Options` are:
 ```
@@ -15,8 +17,14 @@ Where `Options` are:
 ```
 For example:
 ```
-java -jar mqtt-elasticsearch-bridge-0.1-SNAPSHOT.jar -e tcp://localhost:9300 -m tcp://localhost:1883 -t /etc/template.json
+java -jar mqtt-elasticsearch-bridge.jar -e tcp://localhost:9300 -m tcp://localhost:1883 -t /etc/template.json
 ```
+## As docker image
+```
+docker-compose -f /src/main/docker/meb.yml up -d
+```
+Modify /src/main/docker/meb.yml to suit your needs.
+
 # Template format
 ```
 {
