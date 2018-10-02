@@ -1,10 +1,10 @@
 package ru.anhot.mqtt.mqtt_elastic;
 
-import javafx.util.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +15,9 @@ public class IndexFactory {
     public static final String CONFIG_ELEMENT_PROPERTIES = "properties";
 
     public static Map<String,JSONObject> composeIndexes(List<MessageMapper> mappers) {
-        Map<Pair<String, String>, Map<String,JSONObject>> mappings = new HashMap<Pair<String, String>, Map<String,JSONObject>>();
+        Map<Map.Entry<String, String>, Map<String,JSONObject>> mappings = new HashMap<Map.Entry<String, String>, Map<String,JSONObject>>();
         for (MessageMapper mapper: mappers) {
-            Pair<String, String> key = new Pair<String, String>(mapper.getDefaultIndex(), mapper.getDefaultType());
+            Map.Entry<String, String> key = new AbstractMap.SimpleImmutableEntry<String, String>(mapper.getDefaultIndex(), mapper.getDefaultType());
             Map<String,JSONObject> properties = mappings.get(key);
             if (properties==null) {
                 properties = new HashMap<String, JSONObject>();
@@ -28,7 +28,7 @@ public class IndexFactory {
             }
         }
         Map<String,JSONObject> result = new HashMap<String,JSONObject>();
-        for (Pair<String, String> key: mappings.keySet()) {
+        for (Map.Entry<String, String> key: mappings.keySet()) {
             boolean emptyIndex = true;
             String indexName = key.getKey();
             String typeName = key.getValue();
