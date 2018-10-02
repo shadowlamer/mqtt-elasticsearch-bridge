@@ -53,4 +53,15 @@ You can use generated values in `from` field. There are `@@uuid` and `@@id` gene
 if mapper definition contains at least one `property` field and there is no index named `index` exists index with apropriate name, document types and mappings will be created.
 
 If no id is defined for document UUID will be generated.
- 
+
+# Building
+
+## Build executable jar
+```
+mvn package
+```
+
+## Build docker image
+```
+mvn dockerfile:build
+```
