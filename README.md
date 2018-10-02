@@ -21,9 +21,9 @@ java -jar mqtt-elasticsearch-bridge.jar -e tcp://localhost:9300 -m tcp://localho
 ```
 ## As docker image
 ```
-docker-compose -f /src/main/docker/meb.yml up -d
+docker-compose -f src/main/docker/meb.yml up -d
 ```
-Modify /src/main/docker/meb.yml to suit your needs.
+Modify src/main/docker/meb.yml to suit your needs.
 
 # Template format
 ```
