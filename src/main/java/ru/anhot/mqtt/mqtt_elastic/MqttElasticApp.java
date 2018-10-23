@@ -131,7 +131,7 @@ public class MqttElasticApp {
         System.out.println("Connecting...");
 
         try {
-            mqttClient = new MqttClient(mqttUri.toString(), MqttClient.generateClientId());
+            mqttClient =  new MqttClient(mqttUri.toString(), MqttClient.generateClientId());
         } catch (MqttException e) {
             System.out.println("Can't connect to MQTT broker.");
             System.exit(3);

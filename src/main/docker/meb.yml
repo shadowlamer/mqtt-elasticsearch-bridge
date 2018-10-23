@@ -4,15 +4,15 @@ services:
         image: mqtt-elasticsearch-bridge
         environment:
             # - _JAVA_OPTIONS=-Xmx512m -Xms256m
-            - MEB_SLEEP=10 # gives time for services to boot before the application
-        command: -e tcp://10.0.75.1:9300 -m tcp://10.0.75.1:1883
+            - MEB_SLEEP=20 # gives time for services to boot before the application
+        command: -e tcp://elasticsearch:9300 -m tcp://mosquitto:1883
 #        volumes:
 #            -  ~/mebtemplates/template.json:/etc/meb/template.json
-#    mosquitto:
-#        extends:
-#            file: mosquitto.yml
-#            service: mosquitto
-#    elasticsearch:
-#        extends:
-#            file: elasticsearch.yml
-#            service: elasticsearch
+    mosquitto:
+        extends:
+            file: mosquitto.yml
+            service: mosquitto
+    elasticsearch:
+        extends:
+            file: elasticsearch.yml
+            service: elasticsearch
