@@ -1,6 +1,7 @@
 package ru.anhot.mqtt.mqtt_elastic;
 
 import org.elasticsearch.common.Strings;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -62,7 +63,11 @@ public class MessageMapper {
             } else if (GENERATOR_ID.equals(from)) {
                 val = MqttElasticApp.getLongId();
             } else
-                val = jsonFrom.get(from);
+                try {
+                    val = jsonFrom.get(from);
+                } catch (JSONException e) {
+                    val = "";
+                }
 
             if (FIELD_INDEX.equals(to))
                 result.setIndex(String.valueOf(val));

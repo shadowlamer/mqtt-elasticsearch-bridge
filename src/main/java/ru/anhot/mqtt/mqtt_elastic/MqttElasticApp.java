@@ -16,13 +16,11 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.json.JSONObject;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -166,7 +164,7 @@ public class MqttElasticApp {
                 .build();
 
 
-        mqttClient.setCallback( new BridgeCallback(elasticClient, mappers, bulkProcessor) );
+        mqttClient.setCallback( new BridgeCallback(mqttClient, elasticClient, mappers, bulkProcessor) );
         try {
             mqttClient.connect();
         } catch (MqttException e) {
@@ -193,15 +191,6 @@ public class MqttElasticApp {
         }
 
         System.out.println("Server started.");
-
-        try {
-            mqttClient.subscribe("#");
-        } catch (MqttException e) {
-            e.printStackTrace();
-            System.exit(6);
-            return;
-        }
-
     }
 
     public static long getLongId() {
