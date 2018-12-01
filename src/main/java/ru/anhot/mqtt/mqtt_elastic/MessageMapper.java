@@ -3,7 +3,11 @@ package ru.anhot.mqtt.mqtt_elastic;
 import org.elasticsearch.common.Strings;
 import org.json.JSONException;
 import org.json.JSONObject;
+import ru.anhot.mqtt.mqtt_elastic.generators.Generator;
+import ru.anhot.mqtt.mqtt_elastic.generators.GeneratorFactory;
+import ru.anhot.mqtt.mqtt_elastic.generators.ValueGenerator;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,29 +19,22 @@ public class MessageMapper {
     public static final String FIELD_INDEX = "__index";
     public static final String FIELD_TYPE  = "__type";
     public static final String FIELD_ID    = "__id";
-    public static final String GENERATOR_UUID = "@@uuid";
-    public static final String GENERATOR_ID = "@@id";
-    private static final String GROUP_PATTERN = "\\$(\\d)";
     private String defaultIndex = "index";
     private String defaultType = "type";
 
     private Pattern pattern;
-    private Pattern groupPattern;
     private Map<String, String> fields;
 
     private Map<String, JSONObject> properties;
 
-    public MessageMapper(String pattern, Map<String, String> fields, Map<String, JSONObject> properties, String index, String type) {
-        this(pattern, fields, properties);
-        this.defaultIndex = index;
-        this.defaultType = type;
-    }
+    private GeneratorFactory generatorFactory;
+
 
     public MessageMapper(String pattern, Map<String, String> fields, Map<String,JSONObject> properties) {
         this.pattern = Pattern.compile(pattern);
         this.fields = fields;
         this.properties = properties;
-        this.groupPattern = Pattern.compile(GROUP_PATTERN);
+        this.generatorFactory = new GeneratorFactory(this.pattern);
     }
 
     public Optional<ElasticPayload> map(String topic, String mqttPayload) {
@@ -54,20 +51,15 @@ public class MessageMapper {
             String from = fields.get(to);
 
             Object val;
-            Matcher groupMatcher = groupPattern.matcher(from);
-            if (groupMatcher.matches()) {
-                Integer group = Integer.valueOf(groupMatcher.group(1));
-                val = matcher.group(group);
-            } else if (GENERATOR_UUID.equals(from)) {
-                val = uuid.toString();
-            } else if (GENERATOR_ID.equals(from)) {
-                val = MqttElasticApp.getLongId();
-            } else
-                try {
-                    val = jsonFrom.get(from);
-                } catch (JSONException e) {
-                    val = "";
-                }
+            Object jsonValue;
+
+            Generator suitableGenerator = generatorFactory.findSuitableGenerator(from);
+            try {
+                jsonValue = jsonFrom.get(from);
+            } catch (JSONException e) {
+                jsonValue = "";
+            }
+            val = suitableGenerator.getValue(topic, from, jsonValue);
 
             if (FIELD_INDEX.equals(to))
                 result.setIndex(String.valueOf(val));
