@@ -35,7 +35,7 @@ Modify src/main/docker/meb.yml to suit your needs.
             "type": "status",
             "fields":[
                 {"from":"timestamp","to":"timestamp", "property":{"type":"date", "format":"epoch_seconds"}},
-                {"from":"status","to":"status"},
+                {"from":"status","to":"status", "default":"OK"},
                 {"from":"$1","to":"keyId"},
             ]
         }
@@ -58,7 +58,9 @@ There are predefined values for `to`: `__index`,`__type` and `__id` for index, t
 
 You can use generated values in `from` field. There are `@@uuid` and `@@id` generators defined for now. `@@uuid` generates string UUID, `@@id` generates long value, starting from timestamp, when app was started and increments it on each request.
 
-if mapper definition contains at least one `property` field and there is no index named `index` exists index with apropriate name, document types and mappings will be created.
+If mapper definition contains at least one `property` field and there is no index named `index` exists index with apropriate name, document types and mappings will be created.
+
+You can set default value for the payload field, if it's missing in payload in `default` field. 
 
 If no id is defined for document UUID will be generated.
 

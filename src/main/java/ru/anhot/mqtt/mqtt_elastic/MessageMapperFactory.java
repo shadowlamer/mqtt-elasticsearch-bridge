@@ -4,8 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,6 +18,7 @@ public class MessageMapperFactory {
     public static final String CONFIG_ELEMENT_FROM    = "from";
     public static final String CONFIG_ELEMENT_TO      = "to";
     public static final String CONFIG_ELEMENT_PROP    = "property";
+    public static final String CONFIG_ELEMENT_DEFAULT    = "default";
     public static final String CONFIG_ELEMENT_MAPPERS = "mappers";
 
     public static MessageMapper createFromTemplate(JSONObject template) {
@@ -32,7 +31,11 @@ public class MessageMapperFactory {
                 .map(JSONObject.class::cast)
                 .filter(f->f.has(CONFIG_ELEMENT_PROP))
                 .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_TO), f->f.getJSONObject(CONFIG_ELEMENT_PROP)));
-        MessageMapper result = new MessageMapper(topic, fields, properties);
+        Map<String, Object> defaults = StreamSupport.stream(jsonFields.spliterator(), false)
+                .map(JSONObject.class::cast)
+                .filter(f->f.has(CONFIG_ELEMENT_DEFAULT))
+                .collect(Collectors.toMap(f->f.getString(CONFIG_ELEMENT_TO), f->f.get(CONFIG_ELEMENT_DEFAULT)));
+        MessageMapper result = new MessageMapper(topic, fields, properties, defaults);
 
         try {
             result.setDefaultIndex(template.getString(CONFIG_ELEMENT_INDEX));

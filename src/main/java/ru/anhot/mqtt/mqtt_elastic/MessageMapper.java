@@ -1,13 +1,12 @@
 package ru.anhot.mqtt.mqtt_elastic;
 
 import org.elasticsearch.common.Strings;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import ru.anhot.mqtt.mqtt_elastic.generators.Generator;
 import ru.anhot.mqtt.mqtt_elastic.generators.GeneratorFactory;
-import ru.anhot.mqtt.mqtt_elastic.generators.ValueGenerator;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,14 +25,16 @@ public class MessageMapper {
     private Map<String, String> fields;
 
     private Map<String, JSONObject> properties;
+    private Map<String, Object> defaults;
 
     private GeneratorFactory generatorFactory;
 
 
-    public MessageMapper(String pattern, Map<String, String> fields, Map<String,JSONObject> properties) {
+    public MessageMapper(String pattern, Map<String, String> fields, Map<String, JSONObject> properties, Map<String, Object> defaults) {
         this.pattern = Pattern.compile(pattern);
         this.fields = fields;
         this.properties = properties;
+        this.defaults = defaults;
         this.generatorFactory = new GeneratorFactory(this.pattern);
     }
 
@@ -57,7 +58,7 @@ public class MessageMapper {
             try {
                 jsonValue = jsonFrom.get(from);
             } catch (JSONException e) {
-                jsonValue = "";
+                jsonValue = defaults.getOrDefault(to, new JSONObject());
             }
             val = suitableGenerator.getValue(topic, from, jsonValue);
 
@@ -85,7 +86,8 @@ public class MessageMapper {
         StringBuilder builder = new StringBuilder()
                 .append("Pattern: \"").append(pattern).append("\" ")
                 .append("Fields: ").append(fields.toString())
-                .append("Properties: ").append(fields.toString());
+                .append("Properties: ").append(properties.toString())
+                .append("Defaults: ").append(defaults.toString());
         return builder.toString();
     }
 
