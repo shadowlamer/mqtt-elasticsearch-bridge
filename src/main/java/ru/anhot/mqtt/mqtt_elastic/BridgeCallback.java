@@ -38,12 +38,16 @@ public class BridgeCallback implements MqttCallbackExtended {
     }
 
     @Override
-    public void messageArrived(String topic, MqttMessage message) throws Exception {
+    public void messageArrived(String topic, MqttMessage message) {
         for (MessageMapper mapper:mappers)
-            mapper.map(topic,message.toString()).ifPresent(payload->{
-                bulkProcessor.add(elasticClient.prepareIndex(payload.getIndex(), payload.getType(), payload.getId())
-                        .setSource(payload.getSource(), XContentType.JSON).request());
-            });
+            try {
+                mapper.map(topic,message.toString()).ifPresent(payload->{
+                    bulkProcessor.add(elasticClient.prepareIndex(payload.getIndex(), payload.getType(), payload.getId())
+                            .setSource(payload.getSource(), XContentType.JSON).request());
+                });
+            } catch (Exception e) {
+                System.out.println("Can't map message: " + topic + " -> " + message.toString());
+            }
     }
 
     @Override
