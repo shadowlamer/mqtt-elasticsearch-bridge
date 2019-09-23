@@ -3,6 +3,7 @@ package ru.anhot.mqtt.mqtt_elastic;
 
 import org.apache.commons.cli.*;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.client.transport.TransportClient;
@@ -28,17 +29,19 @@ import java.util.Scanner;
 
 public class MqttElasticApp {
 
-    public static final int BULK_DEFAULT_ACTIONS   = 200;
-    public static final int BULK_DEFAULT_SIZE   = 5;
-    public static final int BULK_DEFAULT_FLUSH  = 5;
-    public static final int BULK_DEFAULT_CONCURRENT  = 1;
+    private static final int BULK_DEFAULT_ACTIONS   = 200;
+    private static final int BULK_DEFAULT_SIZE   = 5;
+    private static final int BULK_DEFAULT_FLUSH  = 5;
+    private static final int BULK_DEFAULT_CONCURRENT  = 1;
 
-    public static final String OPTION_TEMPLATE  = "template";
-    public static final String OPTION_MQTT_URI  = "mqtt-uri";
-    public static final String OPTION_ELASTIC_URI  = "elastic-uri";
-    public static final String OPTION_BULK_ACTIONS  = "bulk-actions";
-    public static final String OPTION_BULK_SIZE  = "bulk-size";
-    public static final String OPTION_BULK_FLUSH  = "bulk-flush";
+    private static final String OPTION_TEMPLATE  = "template";
+    private static final String OPTION_MQTT_URI  = "mqtt-uri";
+    private static final String OPTION_ELASTIC_URI  = "elastic-uri";
+    private static final String OPTION_BULK_ACTIONS  = "bulk-actions";
+    private static final String OPTION_BULK_SIZE  = "bulk-size";
+    private static final String OPTION_BULK_FLUSH  = "bulk-flush";
+    private static final String OPTION_MQTT_USER  = "mqtt-user";
+    private static final String OPTION_MQTT_PASSWD  = "mqtt-passwd";
 
     private static long longId = new Date().getTime();
 
@@ -79,6 +82,14 @@ public class MqttElasticApp {
         bulkIntervalOption.setRequired(false);
         options.addOption(bulkIntervalOption);
 
+        Option mqttUserOption = new Option("u", OPTION_MQTT_USER, true, "Username for MQTT broker");
+        mqttUserOption.setRequired(false);
+        options.addOption(mqttUserOption);
+
+        Option mqttPasswdOption = new Option("p", OPTION_MQTT_PASSWD, true, "Password for MQTT broker");
+        mqttPasswdOption.setRequired(false);
+        options.addOption(mqttPasswdOption);
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -94,7 +105,7 @@ public class MqttElasticApp {
 
         String templatePath = cmd.getOptionValue(OPTION_TEMPLATE);
 
-        URI mqttUri = null;
+        URI mqttUri;
         try {
             mqttUri = new URI(cmd.getOptionValue(OPTION_MQTT_URI));
         } catch (URISyntaxException e) {
@@ -103,7 +114,7 @@ public class MqttElasticApp {
             return;
         }
 
-        URI elasticUri = null;
+        URI elasticUri;
         try {
             elasticUri = new URI(cmd.getOptionValue(OPTION_ELASTIC_URI));
         } catch (URISyntaxException e) {
@@ -123,8 +134,8 @@ public class MqttElasticApp {
         List<MessageMapper> mappers = MessageMapperFactory.createMultiFromTemplate(template);
         Map<String, JSONObject> indexes = IndexFactory.composeIndexes(mappers);
 
-        MqttClient mqttClient= null;
-        TransportClient elasticClient = null;
+        MqttClient mqttClient;
+        TransportClient elasticClient;
 
         System.out.println("Connecting...");
 
@@ -146,27 +157,32 @@ public class MqttElasticApp {
         }
 
         int bulkActions = BULK_DEFAULT_ACTIONS;
-        int bulkSize = BULK_DEFAULT_SIZE;
-        int bulkFlush = BULK_DEFAULT_FLUSH;
         if (cmd.hasOption(OPTION_BULK_ACTIONS))
-            bulkActions = Integer.valueOf(cmd.getOptionValue(OPTION_BULK_ACTIONS));
+            bulkActions = Integer.parseInt(cmd.getOptionValue(OPTION_BULK_ACTIONS));
         if (cmd.hasOption(OPTION_BULK_SIZE))
-            bulkActions = Integer.valueOf(cmd.getOptionValue(OPTION_BULK_SIZE));
+            bulkActions = Integer.parseInt(cmd.getOptionValue(OPTION_BULK_SIZE));
         if (cmd.hasOption(OPTION_BULK_FLUSH))
-            bulkActions = Integer.valueOf(cmd.getOptionValue(OPTION_BULK_FLUSH));
+            bulkActions = Integer.parseInt(cmd.getOptionValue(OPTION_BULK_FLUSH));
                 
         listener = new BulkListener();
         bulkProcessor = BulkProcessor.builder(elasticClient, listener)
                 .setBulkActions(bulkActions)
-                .setBulkSize(new ByteSizeValue(bulkSize, ByteSizeUnit.MB))
-                .setFlushInterval(TimeValue.timeValueSeconds(bulkFlush))
+                .setBulkSize(new ByteSizeValue(BULK_DEFAULT_SIZE, ByteSizeUnit.MB))
+                .setFlushInterval(TimeValue.timeValueSeconds(BULK_DEFAULT_FLUSH))
                 .setConcurrentRequests(BULK_DEFAULT_CONCURRENT)
                 .build();
 
 
         mqttClient.setCallback( new BridgeCallback(mqttClient, elasticClient, mappers, bulkProcessor) );
         try {
-            mqttClient.connect();
+            MqttConnectOptions connectOptions = new MqttConnectOptions();
+            if (cmd.hasOption(OPTION_MQTT_USER)) {
+                connectOptions.setUserName(cmd.getOptionValue(OPTION_MQTT_USER));
+            }
+            if (cmd.hasOption(OPTION_MQTT_PASSWD)) {
+                connectOptions.setPassword(cmd.getOptionValue(OPTION_MQTT_PASSWD).toCharArray());
+            }
+            mqttClient.connect(connectOptions);
         } catch (MqttException e) {
             e.printStackTrace();
             System.exit(5);
