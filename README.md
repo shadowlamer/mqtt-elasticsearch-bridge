@@ -9,11 +9,13 @@ java -jar mqtt-elasticsearch-bridge.jar [Options...]
 Where `Options` are:
 ```
  -e,--elastic-uri <arg>    Elasticsearch server URI
- -i,--bulk-flush <arg>     Bulk request flush interval
+ -i,--bulk-flush <arg>     Bulk request flush interval (seconds)
  -m,--mqtt-uri <arg>       MQTT broker URI
  -n,--bulk-actions <arg>   Max number of actions per bulk request
- -s,--bulk-size <arg>      Max amount of data per bulk request
+ -p,--mqtt-passwd <arg>    Password for MQTT broker
+ -s,--bulk-size <arg>      Max amount of data per bulk request (megabytes)
  -t,--template <arg>       Template file path (JSON)
+ -u,--mqtt-user <arg>      Username for MQTT broker
 ```
 For example:
 ```
