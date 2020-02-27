@@ -44,6 +44,11 @@ public class MessageMapper {
         Matcher matcher = pattern.matcher(topic);
         if (!matcher.matches())
             return Optional.empty();
+        int fieldCounter = 1;
+        while (mqttPayload.contains("\"\":")) {
+            mqttPayload = mqttPayload.replaceFirst("\"\":", "\"emptyField" + fieldCounter + "\":");
+            fieldCounter++;
+        }
         JSONObject jsonFrom = new JSONObject(mqttPayload);
         JSONObject jsonTo = new JSONObject();
         ElasticPayload result = new ElasticPayload();

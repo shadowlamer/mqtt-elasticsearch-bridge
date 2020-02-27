@@ -31,4 +31,16 @@ public class MessageMapperTest {
         Assert.assertEquals("type",result.getType());
         Assert.assertEquals("id1",result.getId());
     }
+
+    @Test
+    public void testDuplicateEmptyKeys() throws IOException {
+        JSONObject template = TestUtils.loadJsonFromResource(this.getClass(), "template_single.json");
+        String brokenJsonString = "{\"\":1,\"\":2}";
+        MessageMapper mapper = MessageMapperFactory.createFromTemplate(template);
+        ElasticPayload result = mapper.map("index/type",brokenJsonString).orElseThrow(AssertionError::new);
+        Assert.assertEquals("index",result.getIndex());
+        Assert.assertEquals("type",result.getType());
+
+    }
+
 }
